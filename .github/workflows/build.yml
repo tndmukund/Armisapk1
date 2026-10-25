@@ -1,0 +1,22 @@
+name: android-apk
+on: workflow_dispatch
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: unzip -q android-app-github.zip -d pack
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.5'
+      - run: gradle -p pack/android-app assembleDebug --no-daemon
+      - run: cp pack/android-app/app/build/outputs/apk/debug/app-debug.apk OTSense-Sensor.apk
+      - run: gh release create apk-${{ github.run_number }} OTSense-Sensor.apk --title OTSenseAPK --notes SensorApp
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
